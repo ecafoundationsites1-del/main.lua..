@@ -1,183 +1,140 @@
--- [[ APRIL FOOLS V7.0 ULTIMATE - REFERENCE STYLE ]] --
+-- [[ APRIL FOOLS PREMIUM V5 - WALL PENETRATION FIXED ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
-local LocalPlayer = Players.LocalPlayer
+local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- [[ UI 제거 및 초기화 (중복 방지) ]]
-local old = CoreGui:FindFirstChild("UltimateApril") or LocalPlayer.PlayerGui:FindFirstChild("UltimateApril")
-if old then old:Destroy() end
+-- [[ 기존 UI 제거 ]]
+local oldGui = CoreGui:FindFirstChild("AprilFinal") or (Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("AprilFinal"))
+if oldGui then pcall(function() oldGui:Destroy() end) end
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "UltimateApril"
-ScreenGui.Parent = (pcall(function() return CoreGui end) and CoreGui or LocalPlayer.PlayerGui)
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "AprilFinal"
 ScreenGui.ResetOnSpawn = false
 
--- [[ 설정 및 상태 ]]
-local Settings = {
-    Enabled = false,
-    WallPenetration = false,
-    Key = "DORS123"
+-- [[ 설정 값 ]]
+local aimEnabled = false
+local wallEnabled = false
+local lastFireTime = 0
+local fireRate = 0.1 
+local CONFIG = { 
+    KEY = "1234", -- 사용하기 편하게 고정 키로 변경했습니다.
+    MAX_FIRE_DISTANCE = 2000
 }
 
--- [[ UI 구성 (모바일 최적화 다크 테마) ]]
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 260, 0, 280)
-Main.Position = UDim2.new(0.5, -130, 0.4, -140)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Main.Active = true
-Main.Draggable = true
-Instance.new("UICorner", Main)
+-- [[ UI 생성 (간소화) ]]
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 250, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -125, 0.4, -125)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.Active = true
+MainFrame.Draggable = true
 
-local Title = Instance.new("TextLabel", Main)
+local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "APRIL PREMIUIM V7"
+Title.Text = "WALL PENETRATION V5"
 Title.TextColor3 = Color3.new(1, 1, 1)
-Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Title.Font = Enum.Font.GothamBold
-Instance.new("UICorner", Title)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 
--- [ 로그인 및 기능 섹션 레이아웃 ]
-local LoginSection = Instance.new("Frame", Main)
-LoginSection.Size = UDim2.new(1, 0, 1, -40)
-LoginSection.Position = UDim2.new(0, 0, 0, 40)
-LoginSection.BackgroundTransparency = 1
+local AimBtn = Instance.new("TextButton", MainFrame)
+AimBtn.Size = UDim2.new(0.9, 0, 0, 45)
+AimBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
+AimBtn.Text = "AIM LOCK: OFF"
+AimBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 
-local KeyInput = Instance.new("TextBox", LoginSection)
-KeyInput.Size = UDim2.new(0.85, 0, 0, 45)
-KeyInput.Position = UDim2.new(0.075, 0, 0.2, 0)
-KeyInput.PlaceholderText = "KEY: DORS123"
-KeyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-KeyInput.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", KeyInput)
+local WallBtn = Instance.new("TextButton", MainFrame)
+WallBtn.Size = UDim2.new(0.9, 0, 0, 45)
+WallBtn.Position = UDim2.new(0.05, 0, 0.6, 0)
+WallBtn.Text = "WALL SHOOT: OFF"
+WallBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 
-local LoginBtn = Instance.new("TextButton", LoginSection)
-LoginBtn.Size = UDim2.new(0.85, 0, 0, 45)
-LoginBtn.Position = UDim2.new(0.075, 0, 0.6, 0)
-LoginBtn.Text = "LOGIN"
-LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
-LoginBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", LoginBtn)
-
-local HackSection = Instance.new("Frame", Main)
-HackSection.Size = UDim2.new(1, 0, 1, -40)
-HackSection.Position = UDim2.new(0, 0, 0, 40)
-HackSection.BackgroundTransparency = 1
-HackSection.Visible = false
-
-local AimBtn = Instance.new("TextButton", HackSection)
-AimBtn.Size = UDim2.new(0.85, 0, 0, 50)
-AimBtn.Position = UDim2.new(0.075, 0, 0.15, 0)
-AimBtn.Text = "에임&몸 꺾기: OFF"
-AimBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-AimBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", AimBtn)
-
-local WallBtn = Instance.new("TextButton", HackSection)
-WallBtn.Size = UDim2.new(0.85, 0, 0, 50)
-WallBtn.Position = UDim2.new(0.075, 0, 0.55, 0)
-WallBtn.Text = "벽 관통 사격: OFF"
-WallBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-WallBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", WallBtn)
-
--- [[ 타겟팅 시스템: 팀원 제외 및 살아있는 가장 가까운 적 ]]
-local function GetClosestTarget()
-    local nearest = nil
-    local lastDist = math.huge
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") then
-            local hum = p.Character.Humanoid
-            local root = p.Character:FindFirstChild("HumanoidRootPart")
-            if hum.Health > 0 and root and (p.Team == nil or p.Team ~= LocalPlayer.Team) then
-                local dist = (root.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-                if dist < lastDist then
-                    lastDist = dist
-                    nearest = p.Character
+-- [[ 타겟 찾기 함수 ]]
+local function getTarget()
+    local target, dist = nil, CONFIG.MAX_FIRE_DISTANCE
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            if v.Team ~= Player.Team then
+                local mag = (v.Character.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude
+                if mag < dist then
+                    dist = mag
+                    target = v.Character
                 end
             end
         end
     end
-    return nearest
+    return target
 end
 
--- [[ 기능 1: 몸 꺾기 & 화면 고정 (Stepped에서 애니메이션 덮어쓰기) ]]
-RunService.Stepped:Connect(function()
-    if Settings.Enabled and LocalPlayer.Character then
-        local target = GetClosestTarget()
-        if target then
-            local waist = LocalPlayer.Character:FindFirstChild("Waist", true)
-            local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if waist and root then
-                -- 화면을 적 머리에 고정
-                Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, target.Head.Position)
-                -- 애니메이션을 이기고 몸을 꺾음
-                local lookAt = (target.Head.Position - root.Position).Unit
-                waist.Transform = CFrame.new(Vector3.new(), root.CFrame:VectorToObjectSpace(lookAt))
-            end
-        end
-    end
-end)
+-- [[ 핵심: 벽 뚫는 총알 함수 ]]
+local function fireMagic()
+    local target = getTarget()
+    if not target or not Player.Character then return end
+    
+    local startPos = Player.Character.Head.Position
+    local endPos = target.HumanoidRootPart.Position
 
--- [[ 기능 2: 벽 관통 (사격 데이터 후킹 시뮬레이션) ]]
-local function BulletHook()
-    local target = GetClosestTarget()
-    if target and Settings.WallPenetration then
-        -- 참고 코드 방식의 데이터 패킷 구성
-        local shotData = {
-            ["Hit"] = target.Head,
-            ["Pos"] = target.Head.Position,
-            ["Ray"] = Ray.new(Camera.CFrame.Position, (target.Head.Position - Camera.CFrame.Position).Unit * 1000)
-        }
-        
-        -- 사격 리모트를 찾아 데이터 전송
-        for _, r in pairs(game:GetDescendants()) do
-            if r:IsA("RemoteEvent") and (r.Name:lower():find("fire") or r.Name:lower():find("shoot")) then
-                r:FireServer(shotData.Hit, shotData.Pos)
-            end
-        end
-        
-        -- 시각적 레이저 효과
-        local p = Instance.new("Part", workspace)
-        p.Anchored = true; p.CanCollide = false; p.Material = Enum.Material.Neon; p.Color = Color3.new(1, 0, 0)
-        p.Size = Vector3.new(0.1, 0.1, (LocalPlayer.Character.Head.Position - target.Head.Position).Magnitude)
-        p.CFrame = CFrame.lookAt(LocalPlayer.Character.Head.Position, target.Head.Position) * CFrame.new(0, 0, -p.Size.Z/2)
-        task.wait(0.06); p:Destroy()
-    end
+    -- 투사체 생성
+    local projectile = Instance.new("Part")
+    projectile.Size = Vector3.new(0.3, 0.3, 8)
+    projectile.Color = Color3.new(1, 0.5, 0) -- 주황색 궤적
+    projectile.Material = Enum.Material.Neon
+    projectile.Parent = workspace
+    
+    -- 벽 통과를 위한 핵심 설정
+    projectile.Anchored = true      -- 물리 엔진 영향 제거
+    projectile.CanCollide = false   -- 물리적 충돌 제거
+    projectile.CanTouch = false     -- 닿음 이벤트 제거
+    projectile.CanQuery = false     -- 레이캐스트(벽 체크) 무시
+    
+    projectile.CFrame = CFrame.lookAt(startPos, endPos)
+
+    -- 이동 (Tween)
+    local tween = TweenService:Create(projectile, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {Position = endPos})
+    tween:Play()
+    
+    -- 적중 후 삭제
+    tween.Completed:Connect(function()
+        projectile:Destroy()
+    end)
+    game:GetService("Debris"):AddItem(projectile, 1)
 end
 
--- [[ 버튼 및 입력 이벤트 ]]
-LoginBtn.MouseButton1Click:Connect(function()
-    if KeyInput.Text == Settings.Key then
-        LoginSection.Visible = false
-        HackSection.Visible = true
-        Title.Text = "HACK LOADED"
-        Title.TextColor3 = Color3.new(0, 1, 0)
-    else
-        KeyInput.Text = ""; KeyInput.PlaceholderText = "WRONG KEY!"
-    end
-end)
-
+-- [[ 이벤트 연결 ]]
 AimBtn.MouseButton1Click:Connect(function()
-    Settings.Enabled = not Settings.Enabled
-    AimBtn.Text = "에임&몸 꺾기: " .. (Settings.Enabled and "ON" or "OFF")
-    AimBtn.BackgroundColor3 = Settings.Enabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    aimEnabled = not aimEnabled
+    AimBtn.Text = "AIM LOCK: " .. (aimEnabled and "ON" or "OFF")
+    AimBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
 end)
 
 WallBtn.MouseButton1Click:Connect(function()
-    Settings.WallPenetration = not Settings.WallPenetration
-    WallBtn.Text = "벽 관통 사격: " .. (Settings.WallPenetration and "ON" or "OFF")
-    WallBtn.BackgroundColor3 = Settings.WallPenetration and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    wallEnabled = not wallEnabled
+    WallBtn.Text = "WALL SHOOT: " .. (wallEnabled and "ON" or "OFF")
+    WallBtn.BackgroundColor3 = wallEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
 end)
 
-UserInputService.InputBegan:Connect(function(input, proc)
-    if not proc and Settings.WallPenetration and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
-        BulletHook()
+-- 에임봇 루프
+RunService.RenderStepped:Connect(function()
+    if aimEnabled then
+        local target = getTarget()
+        if target then
+            Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, target.HumanoidRootPart.Position)
+        end
+    end
+end)
+
+-- 클릭/터치 시 발사
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if wallEnabled and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        if tick() - lastFireTime >= fireRate then
+            lastFireTime = tick()
+            fireMagic()
+        end
     end
 end)
 
