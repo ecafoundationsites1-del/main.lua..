@@ -1,5 +1,5 @@
 -- [[ APRIL FOOLS PREMIUM V5 - ULTIMATE MOBILE FORCE ]] --
--- Revised version with error handling and security improvements
+-- Revised version with FIXED KEY: DORS123
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -49,14 +49,14 @@ end
 local aimEnabled = false
 local wallEnabled = false
 local lastFireTime = 0
-local fireRate = 0.1 -- Prevent spam
+local fireRate = 0.1 
 local CONFIG = { 
-    KEY = os.time() % 10000, -- Dynamic key based on time
+    KEY = "DORS123", -- 키를 DORS123으로 고정함
     TITLE = "MOBILE HACK V5",
     MAX_FIRE_DISTANCE = 1000
 }
 
--- [[ UI Components (Draggable) ]]
+-- [[ UI Components ]]
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 260, 0, 280)
 MainFrame.Position = UDim2.new(0.5, -130, 0.4, -140)
@@ -83,7 +83,7 @@ LoginPage.BackgroundTransparency = 1
 local KeyInput = Instance.new("TextBox", LoginPage)
 KeyInput.Size = UDim2.new(0.8, 0, 0, 40)
 KeyInput.Position = UDim2.new(0.1, 0, 0.2, 0)
-KeyInput.PlaceholderText = "Enter authentication key..."
+KeyInput.PlaceholderText = "Enter Key (DORS123)" -- 힌트 추가
 KeyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 KeyInput.TextColor3 = Color3.new(1, 1, 1)
 KeyInput.TextScaled = true
@@ -121,15 +121,12 @@ WallBtn.TextScaled = true
 
 -- [[ Core Functions ]]
 
--- Safe target acquisition with distance limit
 local function getTarget()
     if not Player or not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
         return nil
     end
     
     local playerRoot = Player.Character:FindFirstChild("HumanoidRootPart")
-    if not playerRoot then return nil end
-    
     local target, dist = nil, CONFIG.MAX_FIRE_DISTANCE
     
     for _, v in pairs(Players:GetPlayers()) do
@@ -138,7 +135,6 @@ local function getTarget()
             local targetRoot = v.Character:FindFirstChild("HumanoidRootPart")
             
             if humanoid and targetRoot and humanoid.Health > 0 then
-                -- Check if enemy (different team or no team)
                 if v.Team == nil or v.Team ~= Player.Team then
                     local mag = (targetRoot.Position - playerRoot.Position).Magnitude
                     if mag < dist then
@@ -149,34 +145,25 @@ local function getTarget()
             end
         end
     end
-    
     return target
 end
 
--- Feature 1: Body rotation with safety checks
 local steppedConnection
 steppedConnection = RunService.Stepped:Connect(function()
-    if not aimEnabled or not Player or not Player.Character then
-        return
-    end
+    if not aimEnabled or not Player or not Player.Character then return end
     
     local playerChar = Player.Character
     local waist = playerChar:FindFirstChild("Waist", true)
     local root = playerChar:FindFirstChild("HumanoidRootPart")
-    local head = playerChar:FindFirstChild("Head")
     
-    if not waist or not root or not head then
-        return
-    end
+    if not waist or not root then return end
     
     local target = getTarget()
     if target then
         local targetRoot = target:FindFirstChild("HumanoidRootPart")
         if targetRoot then
             pcall(function()
-                -- Fix camera aim
                 Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetRoot.Position)
-                -- Force waist rotation toward target
                 local lookAt = (targetRoot.Position - root.Position).Unit
                 local targetCFrame = CFrame.new(Vector3.new(), root.CFrame:VectorToObjectSpace(lookAt))
                 waist.Transform = targetCFrame
@@ -185,9 +172,7 @@ steppedConnection = RunService.Stepped:Connect(function()
     end
 end)
 
--- Feature 2: Wall penetration projectile with safety and cleanup
 local activeParts = {}
-
 local function cleanupPart(part)
     if part and part.Parent then
         table.remove(activeParts, table.find(activeParts, part) or #activeParts)
@@ -197,18 +182,14 @@ end
 
 local function fireMagic()
     if not Player or not Player.Character then return end
-    
     local playerHead = Player.Character:FindFirstChild("Head")
-    if not playerHead then return end
-    
     local target = getTarget()
-    if not target then return end
+    if not (playerHead and target) then return end
     
     local targetRoot = target:FindFirstChild("HumanoidRootPart")
     if not targetRoot then return end
     
-    -- Create projectile with safety
-    local p = pcall(function()
+    pcall(function()
         local projectile = Instance.new("Part", workspace)
         projectile.Size = Vector3.new(0.3, 0.3, 10)
         projectile.Color = Color3.new(1, 1, 0)
@@ -218,57 +199,41 @@ local function fireMagic()
         
         table.insert(activeParts, projectile)
         
-        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
-        local tween = TweenService:Create(projectile, tweenInfo, {Position = targetRoot.Position})
-        
-        tween.Completed:Connect(function()
-            cleanupPart(projectile)
-        end)
-        
+        local tween = TweenService:Create(projectile, TweenInfo.new(0.1), {Position = targetRoot.Position})
+        tween.Completed:Connect(function() cleanupPart(projectile) end)
         tween:Play()
-        
-        -- Failsafe cleanup after 5 seconds
         game:GetService("Debris"):AddItem(projectile, 5)
     end)
-    
-    if not p then
-        warn("ERROR: Failed to create projectile")
-    end
 end
 
 -- [[ Event Handlers ]]
 
--- Login button handler
 LoginBtn.MouseButton1Click:Connect(function()
-    local inputKey = tonumber(KeyInput.Text) or -1
-    if inputKey == CONFIG.KEY then
+    -- 입력된 텍스트가 CONFIG.KEY("DORS123")와 일치하는지 확인
+    if KeyInput.Text == CONFIG.KEY then
         LoginPage.Visible = false
         HackPage.Visible = true
         Title.Text = "WELCOME, DEVELOPER"
     else
         KeyInput.Text = ""
-        KeyInput.PlaceholderText = "WRONG KEY! Try again."
+        KeyInput.PlaceholderText = "INVALID KEY! Try: DORS123"
     end
 end)
 
--- Aim button handler
 AimBtn.MouseButton1Click:Connect(function()
     aimEnabled = not aimEnabled
     AimBtn.Text = "Aim & Body Rotation: " .. (aimEnabled and "ON" or "OFF")
     AimBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(120, 0, 0)
 end)
 
--- Wall penetration button handler
 WallBtn.MouseButton1Click:Connect(function()
     wallEnabled = not wallEnabled
     WallBtn.Text = "Wall Penetration: " .. (wallEnabled and "ON" or "OFF")
     WallBtn.BackgroundColor3 = wallEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(120, 0, 0)
 end)
 
--- Fire input handler with rate limiting
 UserInputService.InputBegan:Connect(function(input, proc)
     if proc then return end
-    
     if wallEnabled and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
         local currentTime = tick()
         if currentTime - lastFireTime >= fireRate then
@@ -278,16 +243,9 @@ UserInputService.InputBegan:Connect(function(input, proc)
     end
 end)
 
--- Cleanup on script unload
 game:BindToClose(function()
-    if steppedConnection then
-        steppedConnection:Disconnect()
-    end
-    for _, part in ipairs(activeParts) do
-        cleanupPart(part)
-    end
-    if ScreenGui and ScreenGui.Parent then
-        pcall(function() ScreenGui:Destroy() end)
-    end
+    if steppedConnection then steppedConnection:Disconnect() end
+    for _, part in ipairs(activeParts) do cleanupPart(part) end
+    if ScreenGui then pcall(function() ScreenGui:Destroy() end) end
 end)
 
