@@ -16,7 +16,7 @@ if oldGui then pcall(function() oldGui:Destroy() end) end
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = uiName
-ScreenGui.ResetOnSpawn = false -- 라운드 시작/부활 시 사라짐 방지
+ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- 실행 환경에 따른 부모 설정
@@ -29,7 +29,7 @@ local state = {
     wall = false,
     lastFire = 0,
     fireRate = 0.1,
-    key = "1234" -- 고정 접속 키
+    key = "1234"
 }
 
 -- [[ UI 컴포넌트 ]]
@@ -37,15 +37,17 @@ local Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.new(0, 260, 0, 280)
 Main.Position = UDim2.new(0.5, -130, 0.4, -140)
 Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
-Instance.new("UICorner", Main)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
 
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.Text = "PREMIUM V5 (COMBINED)"
 Title.TextColor3 = Color3.new(1, 0, 0)
 Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Title.BorderSizePixel = 0
 Title.Font = Enum.Font.GothamBold
 Title.TextScaled = true
 
@@ -54,11 +56,13 @@ local LoginPage = Instance.new("Frame", Main)
 LoginPage.Size = UDim2.new(1, 0, 1, -40)
 LoginPage.Position = UDim2.new(0, 0, 0, 40)
 LoginPage.BackgroundTransparency = 1
+LoginPage.BorderSizePixel = 0
 
 local HackPage = Instance.new("Frame", Main)
 HackPage.Size = UDim2.new(1, 0, 1, -40)
 HackPage.Position = UDim2.new(0, 0, 0, 40)
 HackPage.BackgroundTransparency = 1
+HackPage.BorderSizePixel = 0
 HackPage.Visible = false
 
 -- 로그인 요소
@@ -66,13 +70,25 @@ local KeyInput = Instance.new("TextBox", LoginPage)
 KeyInput.Size = UDim2.new(0.8, 0, 0, 40)
 KeyInput.Position = UDim2.new(0.1, 0, 0.2, 0)
 KeyInput.PlaceholderText = "Enter Key (1234)"
+KeyInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+KeyInput.BorderSizePixel = 0
 KeyInput.TextScaled = true
+KeyInput.Font = Enum.Font.Gotham
+KeyInput.ClearTextOnFocus = false
+Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 4)
 
 local LoginBtn = Instance.new("TextButton", LoginPage)
 LoginBtn.Size = UDim2.new(0.8, 0, 0, 40)
 LoginBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
 LoginBtn.Text = "LOGIN"
 LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+LoginBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoginBtn.BorderSizePixel = 0
+LoginBtn.Font = Enum.Font.GothamBold
+LoginBtn.TextScaled = true
+Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 4)
 
 -- 기능 버튼
 local AimBtn = Instance.new("TextButton", HackPage)
@@ -80,12 +96,22 @@ AimBtn.Size = UDim2.new(0.8, 0, 0, 50)
 AimBtn.Position = UDim2.new(0.1, 0, 0.2, 0)
 AimBtn.Text = "AIM LOCK: OFF"
 AimBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+AimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimBtn.BorderSizePixel = 0
+AimBtn.Font = Enum.Font.GothamBold
+AimBtn.TextScaled = true
+Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 4)
 
 local WallBtn = Instance.new("TextButton", HackPage)
 WallBtn.Size = UDim2.new(0.8, 0, 0, 50)
 WallBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
 WallBtn.Text = "WALL SHOOT: OFF"
 WallBtn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+WallBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+WallBtn.BorderSizePixel = 0
+WallBtn.Font = Enum.Font.GothamBold
+WallBtn.TextScaled = true
+Instance.new("UICorner", WallBtn).CornerRadius = UDim.new(0, 4)
 
 -- [[ 핵심 기능 로직 ]]
 
@@ -96,7 +122,6 @@ local function getTarget()
 
     for _, v in pairs(Players:GetPlayers()) do
         if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-            -- 팀 체크 (적군만 타겟팅)
             if v.Team ~= Player.Team or v.Team == nil then
                 local hum = v.Character:FindFirstChild("Humanoid")
                 if hum and hum.Health > 0 then
@@ -120,9 +145,10 @@ local function fireMagic()
     bullet.Size = Vector3.new(0.4, 0.4, 6)
     bullet.Color = Color3.new(1, 1, 0)
     bullet.Material = Enum.Material.Neon
-    bullet.Anchored = true
     bullet.CanCollide = false
-    bullet.CanQuery = false -- 벽 무시 핵심 옵션
+    bullet.CanQuery = false
+    bullet.TopSurface = Enum.SurfaceType.Smooth
+    bullet.BottomSurface = Enum.SurfaceType.Smooth
     
     local startPos = Player.Character.Head.Position
     local endPos = target.HumanoidRootPart.Position
@@ -130,7 +156,12 @@ local function fireMagic()
     
     local tween = TweenService:Create(bullet, TweenInfo.new(0.08, Enum.EasingStyle.Linear), {Position = endPos})
     tween:Play()
-    tween.Completed:Connect(function() bullet:Destroy() end)
+    tween.Completed:Connect(function() 
+        if bullet and bullet.Parent then
+            bullet:Destroy() 
+        end
+    end)
+    
     game:GetService("Debris"):AddItem(bullet, 1)
 end
 
@@ -164,7 +195,7 @@ end)
 RunService.Heartbeat:Connect(function()
     if state.aim then
         local target = getTarget()
-        if target then
+        if target and target:FindFirstChild("HumanoidRootPart") then
             Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, target.HumanoidRootPart.Position)
         end
     end
