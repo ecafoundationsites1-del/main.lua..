@@ -24,13 +24,8 @@ ScreenGui.Name = "OptimizedGui"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- 실행기에 따라 적절한 부모 설정 (CoreGui 우선 시도)
-local success, _ = pcall(function()
-    ScreenGui.Parent = CoreGui
-end)
-if not success then
-    ScreenGui.Parent = Player:WaitForChild("PlayerGui")
-end
+-- 실행기에 따라 적절한 부모 설정 (PlayerGui 직접 사용)
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 260, 0, 280)
@@ -50,6 +45,7 @@ Title.TextColor3 = Color3.new(1, 1, 1)
 Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 16
+Title.BorderSizePixel = 0
 Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 10)
 
 -- [ 로그인 섹션 ]
@@ -65,7 +61,8 @@ KeyInput.PlaceholderText = "인증키(DORS123) 입력..."
 KeyInput.Text = ""
 KeyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 KeyInput.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", KeyInput)
+KeyInput.BorderSizePixel = 0
+Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 8)
 
 local LoginBtn = Instance.new("TextButton", LoginSection)
 LoginBtn.Size = UDim2.new(1, 0, 0, 45)
@@ -73,7 +70,10 @@ LoginBtn.Position = UDim2.new(0, 0, 0.5, 0)
 LoginBtn.Text = "로그인 인증"
 LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
 LoginBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", LoginBtn)
+LoginBtn.BorderSizePixel = 0
+LoginBtn.Font = Enum.Font.GothamBold
+LoginBtn.TextSize = 14
+Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 8)
 
 -- [ 기능 섹션 ]
 local FeatureSection = Instance.new("Frame", MainFrame)
@@ -91,7 +91,10 @@ AimBtn.Position = UDim2.new(0, 0, 0.1, 0)
 AimBtn.Text = "몸 꺾기 에임: OFF"
 AimBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
 AimBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", AimBtn)
+AimBtn.BorderSizePixel = 0
+AimBtn.Font = Enum.Font.GothamBold
+AimBtn.TextSize = 14
+Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 8)
 
 local WallBtn = Instance.new("TextButton", FeatureSection)
 WallBtn.Size = UDim2.new(1, 0, 0, 50)
@@ -99,7 +102,10 @@ WallBtn.Position = UDim2.new(0, 0, 0.5, 0)
 WallBtn.Text = "벽 관통 사격: OFF"
 WallBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
 WallBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", WallBtn)
+WallBtn.BorderSizePixel = 0
+WallBtn.Font = Enum.Font.GothamBold
+WallBtn.TextSize = 14
+Instance.new("UICorner", WallBtn).CornerRadius = UDim.new(0, 8)
 
 -- [[ 필터링 로직: 팀원 제외 및 살아있는 적만 ]]
 local function getClosestEnemy()
@@ -172,4 +178,3 @@ UserInputService.InputBegan:Connect(function(input, proc)
         end
     end
 end)
-
