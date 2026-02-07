@@ -1,4 +1,5 @@
--- [[ 서비스 선언 ]]
+-- [[ APRIL FOOLS PREMIUM V5 - ULTIMATE MOBILE FORCE ]] --
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -6,175 +7,160 @@ local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
 local Player = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
--- [[ 기존 UI 제거 (중복 실행 방지) ]]
-for _, v in pairs(Player.PlayerGui:GetChildren()) do
-    if v.Name == "OptimizedGui" then v:Destroy() end
-end
+-- [[ 기존 UI 제거 및 재생성 ]]
+local oldGui = CoreGui:FindFirstChild("AprilFinal") or Player.PlayerGui:FindFirstChild("AprilFinal")
+if oldGui then oldGui:Destroy() end
 
--- [[ 설정 ]]
-local CONFIG = {
-    KEY = "DORS123",
-    TITLE = "MOBILE PREMIUM V3"
-}
-
--- [[ UI 생성 ]]
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "OptimizedGui"
+ScreenGui.Name = "AprilFinal"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- 실행기 호환성을 위해 부모 설정
+local uiParent = pcall(function() ScreenGui.Parent = CoreGui end) and CoreGui or Player:WaitForChild("PlayerGui")
+ScreenGui.Parent = uiParent
 
--- 실행기에 따라 적절한 부모 설정 (PlayerGui 직접 사용)
-ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+-- [ 전역 상태 ]
+local aimEnabled = false
+local wallEnabled = false
+local CONFIG = { KEY = "DORS123", TITLE = "MOBILE HACK V5" }
 
+-- [[ UI 구성 (드래그 가능) ]]
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 260, 0, 280)
 MainFrame.Position = UDim2.new(0.5, -130, 0.4, -140)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.Active = true
-MainFrame.Draggable = true -- 모바일 드래그 지원
+MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame)
 
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
-
--- 타이틀 바
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.Text = CONFIG.TITLE
-Title.TextColor3 = Color3.new(1, 1, 1)
-Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.TextColor3 = Color3.new(1, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
-Title.BorderSizePixel = 0
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", Title)
 
--- [ 로그인 섹션 ]
-local LoginSection = Instance.new("Frame", MainFrame)
-LoginSection.Size = UDim2.new(1, -20, 1, -60)
-LoginSection.Position = UDim2.new(0, 10, 0, 50)
-LoginSection.BackgroundTransparency = 1
+-- [ 페이지 1: 로그인 ]
+local LoginPage = Instance.new("Frame", MainFrame)
+LoginPage.Size = UDim2.new(1, 0, 1, -40)
+LoginPage.Position = UDim2.new(0, 0, 0, 40)
+LoginPage.BackgroundTransparency = 1
 
-local KeyInput = Instance.new("TextBox", LoginSection)
-KeyInput.Size = UDim2.new(1, 0, 0, 45)
-KeyInput.Position = UDim2.new(0, 0, 0.15, 0)
+local KeyInput = Instance.new("TextBox", LoginPage)
+KeyInput.Size = UDim2.new(0.8, 0, 0, 40)
+KeyInput.Position = UDim2.new(0.1, 0, 0.2, 0)
 KeyInput.PlaceholderText = "인증키(DORS123) 입력..."
-KeyInput.Text = ""
-KeyInput.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+KeyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 KeyInput.TextColor3 = Color3.new(1, 1, 1)
-KeyInput.BorderSizePixel = 0
-Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 8)
 
-local LoginBtn = Instance.new("TextButton", LoginSection)
-LoginBtn.Size = UDim2.new(1, 0, 0, 45)
-LoginBtn.Position = UDim2.new(0, 0, 0.5, 0)
-LoginBtn.Text = "로그인 인증"
-LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
+local LoginBtn = Instance.new("TextButton", LoginPage)
+LoginBtn.Size = UDim2.new(0.8, 0, 0, 40)
+LoginBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
+LoginBtn.Text = "LOGIN"
+LoginBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
 LoginBtn.TextColor3 = Color3.new(1, 1, 1)
-LoginBtn.BorderSizePixel = 0
-LoginBtn.Font = Enum.Font.GothamBold
-LoginBtn.TextSize = 14
-Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 8)
 
--- [ 기능 섹션 ]
-local FeatureSection = Instance.new("Frame", MainFrame)
-FeatureSection.Size = UDim2.new(1, -20, 1, -60)
-FeatureSection.Position = UDim2.new(0, 10, 0, 50)
-FeatureSection.BackgroundTransparency = 1
-FeatureSection.Visible = false
+-- [ 페이지 2: 기능 ]
+local HackPage = Instance.new("Frame", MainFrame)
+HackPage.Size = UDim2.new(1, 0, 1, -40)
+HackPage.Position = UDim2.new(0, 0, 0, 40)
+HackPage.BackgroundTransparency = 1
+HackPage.Visible = false
 
-local aimEnabled = false
-local wallHackEnabled = false
-
-local AimBtn = Instance.new("TextButton", FeatureSection)
-AimBtn.Size = UDim2.new(1, 0, 0, 50)
-AimBtn.Position = UDim2.new(0, 0, 0.1, 0)
-AimBtn.Text = "몸 꺾기 에임: OFF"
-AimBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+local AimBtn = Instance.new("TextButton", HackPage)
+AimBtn.Size = UDim2.new(0.8, 0, 0, 50)
+AimBtn.Position = UDim2.new(0.1, 0, 0.2, 0)
+AimBtn.Text = "에임&몸 꺾기: OFF"
+AimBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
 AimBtn.TextColor3 = Color3.new(1, 1, 1)
-AimBtn.BorderSizePixel = 0
-AimBtn.Font = Enum.Font.GothamBold
-AimBtn.TextSize = 14
-Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 8)
 
-local WallBtn = Instance.new("TextButton", FeatureSection)
-WallBtn.Size = UDim2.new(1, 0, 0, 50)
-WallBtn.Position = UDim2.new(0, 0, 0.5, 0)
-WallBtn.Text = "벽 관통 사격: OFF"
-WallBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+local WallBtn = Instance.new("TextButton", HackPage)
+WallBtn.Size = UDim2.new(0.8, 0, 0, 50)
+WallBtn.Position = UDim2.new(0.1, 0, 0.6, 0)
+WallBtn.Text = "벽 관통샷: OFF"
+WallBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
 WallBtn.TextColor3 = Color3.new(1, 1, 1)
-WallBtn.BorderSizePixel = 0
-WallBtn.Font = Enum.Font.GothamBold
-WallBtn.TextSize = 14
-Instance.new("UICorner", WallBtn).CornerRadius = UDim.new(0, 8)
 
--- [[ 필터링 로직: 팀원 제외 및 살아있는 적만 ]]
-local function getClosestEnemy()
-    local maxDist = 2000
-    local target = nil
+-- [[ 핵심 기능 로직 ]]
+
+local function getTarget()
+    local target, dist = nil, 1000
     for _, v in pairs(Players:GetPlayers()) do
-        if v ~= Player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-            local hum = v.Character:FindFirstChild("Humanoid")
-            -- 적군 및 생존 여부 확인
-            if (v.Team == nil or v.Team ~= Player.Team) and (hum and hum.Health > 0) then
+        if v ~= Player and v.Character and v.Character:FindFirstChild("Humanoid") then
+            if v.Character.Humanoid.Health > 0 and (v.Team == nil or v.Team ~= Player.Team) then
                 local mag = (v.Character.HumanoidRootPart.Position - Player.Character.HumanoidRootPart.Position).Magnitude
-                if mag < maxDist then
-                    maxDist = mag
-                    target = v.Character
-                end
+                if mag < dist then dist = mag; target = v.Character end
             end
         end
     end
     return target
 end
 
--- [[ 이벤트 연결 ]]
-LoginBtn.MouseButton1Click:Connect(function()
-    if KeyInput.Text == CONFIG.KEY then
-        LoginSection.Visible = false
-        FeatureSection.Visible = true
-        Title.Text = "ACCESS GRANTED"
-    else
-        KeyInput.Text = ""
-        KeyInput.PlaceholderText = "잘못된 키입니다!"
-    end
-end)
-
-AimBtn.MouseButton1Click:Connect(function()
-    aimEnabled = not aimEnabled
-    AimBtn.Text = "몸 꺾기 에임: " .. (aimEnabled and "ON" or "OFF")
-    AimBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(150, 50, 50)
-end)
-
-WallBtn.MouseButton1Click:Connect(function()
-    wallHackEnabled = not wallHackEnabled
-    WallBtn.Text = "벽 관통 사격: " .. (wallHackEnabled and "ON" or "OFF")
-    WallBtn.BackgroundColor3 = wallHackEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(150, 50, 50)
-end)
-
--- 에임봇 루프 (몸 꺾기)
-RunService.RenderStepped:Connect(function()
-    if aimEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") then
-        local target = getClosestEnemy()
+-- 기능 1: 몸 꺾기 (Stepped에서 강제 Transform)
+RunService.Stepped:Connect(function()
+    if aimEnabled and Player.Character then
+        local target = getTarget()
         if target then
             local waist = Player.Character:FindFirstChild("Waist", true)
-            if waist then
-                local dir = (target.HumanoidRootPart.Position - Player.Character.Head.Position).Unit
-                waist.C0 = waist.C0:Lerp(CFrame.new(waist.C0.Position, dir), 0.15)
+            local root = Player.Character:FindFirstChild("HumanoidRootPart")
+            if waist and root then
+                -- 카메라 에임 고정
+                Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, target.HumanoidRootPart.Position)
+                -- 애니메이션을 무시하고 허리를 타겟 방향으로 강제 회전
+                local lookAt = (target.HumanoidRootPart.Position - root.Position).Unit
+                local targetCFrame = CFrame.new(Vector3.new(), root.CFrame:VectorToObjectSpace(lookAt))
+                waist.Transform = targetCFrame
             end
         end
     end
 end)
 
--- 벽 관통 총알 연출
-UserInputService.InputBegan:Connect(function(input, proc)
-    if not proc and wallHackEnabled and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
-        local target = getClosestEnemy()
-        if target then
-            local p = Instance.new("Part", workspace)
-            p.Anchored = true; p.CanCollide = false; p.Size = Vector3.new(0.3, 0.3, 5)
-            p.Color = Color3.new(1, 1, 0); p.CFrame = CFrame.lookAt(Player.Character.Head.Position, target.HumanoidRootPart.Position)
-            local tween = TweenService:Create(p, TweenInfo.new(0.15), {Position = target.HumanoidRootPart.Position})
-            tween:Play(); tween.Completed:Connect(function() p:Destroy() end)
-        end
+-- 기능 2: 벽 관통 총알 시뮬레이션
+local function fireMagic()
+    local target = getTarget()
+    if target then
+        local p = Instance.new("Part", workspace)
+        p.Size = Vector3.new(0.3, 0.3, 10)
+        p.Color = Color3.new(1, 1, 0)
+        p.CanCollide = false
+        p.Anchored = true
+        p.CFrame = CFrame.lookAt(Player.Character.Head.Position, target.HumanoidRootPart.Position)
+        
+        local tw = TweenService:Create(p, TweenInfo.new(0.1), {Position = target.HumanoidRootPart.Position})
+        tw:Play()
+        tw.Completed:Connect(function() p:Destroy() end)
+    end
+end
+
+-- [[ 이벤트 ]]
+LoginBtn.MouseButton1Click:Connect(function()
+    if KeyInput.Text == CONFIG.KEY then
+        LoginPage.Visible = false
+        HackPage.Visible = true
+        Title.Text = "WELCOME, DEVELOPER"
+    else
+        KeyInput.Text = ""; KeyInput.PlaceholderText = "WRONG KEY!"
     end
 end)
+
+AimBtn.MouseButton1Click:Connect(function()
+    aimEnabled = not aimEnabled
+    AimBtn.Text = "에임&몸 꺾기: " .. (aimEnabled and "ON" or "OFF")
+    AimBtn.BackgroundColor3 = aimEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(120, 0, 0)
+end)
+
+WallBtn.MouseButton1Click:Connect(function()
+    wallEnabled = not wallEnabled
+    WallBtn.Text = "벽 관통샷: " .. (wallEnabled and "ON" or "OFF")
+    WallBtn.BackgroundColor3 = wallEnabled and Color3.fromRGB(0, 120, 0) or Color3.fromRGB(120, 0, 0)
+end)
+
+UserInputService.InputBegan:Connect(function(input, proc)
+    if not proc and wallEnabled and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
+        fireMagic()
+    end
+end)
+
